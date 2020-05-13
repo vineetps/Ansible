@@ -1,0 +1,45 @@
+- name: Install and configure Node Exporter
+  hosts: all
+  become: yes
+
+  tasks:
+    - name: Update and upgrade apt packages
+      become: true
+      apt: update_cache=yes force_apt_get=yes cache_valid_time=3600
+
+    - name: Installing packages
+      apt:
+        pkg:
+        - firewalld
+        state: present
+
+    - name: creating node-exporter directory
+      file:
+        path: /usr/local/node-exporter
+        state: directory
+
+    - name: Unarchive Node Exporter
+      unarchive:
+        src: https://github.com/prometheus/node_exporter/releases/download/v0.18.1/node_exporter-0.18.1.linux-amd64.tar.gz
+        dest: /usr/local/node-exporter/
+        remote_src: yes
+
+    - name: Creating service
+      shell: |
+        cp /usr/local/node-exporter/node_exporter-0.18.1.linux-amd64/node_exporter /usr/local/bin/node_exporter
+        systemctl daemon-reload
+
+    - name: copying service files
+      copy: src={{ item.src }} dest={{ item.dest }}
+      with_items:
+        - { src: './node_exporter.service', dest: '/etc/systemd/system/node_exporter.service' }
+
+    - name: Starting Node Exporter
+      shell: |
+        systemctl start node_exporter.service
+        systemctl enable node_exporter.service
+
+    - name: Configuring Firewall
+      shell: |
+        firewall-cmd --add-port=9100/tcp --permanent
+        firewall-cmd --reload
