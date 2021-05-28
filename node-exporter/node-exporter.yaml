@@ -1,6 +1,9 @@
 - name: Install and configure Node Exporter
   hosts: all
   become: yes
+  vars:
+    version: 1.1.2
+  
 
   tasks:
     - name: Update and upgrade apt packages
@@ -20,13 +23,13 @@
 
     - name: Unarchive Node Exporter
       unarchive:
-        src: https://github.com/prometheus/node_exporter/releases/download/v0.18.1/node_exporter-0.18.1.linux-amd64.tar.gz
+        src: https://github.com/prometheus/node_exporter/releases/download/v{{ version }}/node_exporter-{{ version }}.linux-amd64.tar.gz
         dest: /usr/local/node-exporter/
         remote_src: yes
 
     - name: Creating service
       shell: |
-        cp /usr/local/node-exporter/node_exporter-0.18.1.linux-amd64/node_exporter /usr/local/bin/node_exporter
+        cp /usr/local/node-exporter/node_exporter-{{ version }}.linux-amd64/node_exporter /usr/local/bin/node_exporter
         systemctl daemon-reload
 
     - name: copying service files
